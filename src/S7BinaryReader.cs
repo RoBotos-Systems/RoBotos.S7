@@ -14,7 +14,9 @@ public sealed class S7BinaryReader(Stream stream, bool _leaveOpen = false) : IDi
     private void EndBooleanFlag()
     {
         if (!_wasLastBoolean)
+        {
             return;
+        }
 
         _extractedBools = 0;
         _wasLastBoolean = false;
