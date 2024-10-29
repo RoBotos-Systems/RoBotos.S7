@@ -3,7 +3,7 @@ using System.Text;
 
 namespace RoBotos.S7;
 
-// this class buffers all written data until Flush or Dispose is called because sps has to get all data in one go
+// this class buffers all written data until Flush or Dispose is called because sps has to get all data in one packet
 public sealed class S7BinaryWriter(Stream stream, bool _leaveOpen = false) : IDisposable
 {
     private readonly BinaryWriter _writer = new(new MemoryStream(), Encoding.ASCII, false);
@@ -40,6 +40,12 @@ public sealed class S7BinaryWriter(Stream stream, bool _leaveOpen = false) : IDi
     }
 
     public void WriteDInt(int value)
+    {
+        EndBooleanFlag();
+        _writer.WriteBigEndian(value);
+    }
+    
+    public void WriteUDInt(uint value)
     {
         EndBooleanFlag();
         _writer.WriteBigEndian(value);

@@ -29,8 +29,8 @@ public sealed class S7BinaryReader(Stream stream, bool _leaveOpen = false) : IDi
         return new(_reader.ReadUInt16BigEndian());
     }
 
-    public short ReadInt()
-    { // awl int is 16 bits
+    public short ReadInt() // awl int is 16 bits
+    {
         EndBooleanFlag();
         return _reader.ReadInt16BigEndian();
     }
@@ -39,6 +39,12 @@ public sealed class S7BinaryReader(Stream stream, bool _leaveOpen = false) : IDi
     {
         EndBooleanFlag();
         return _reader.ReadInt32BigEndian();
+    }
+    
+    public uint ReadUDInt()
+    {
+        EndBooleanFlag();
+        return _reader.ReadUInt32BigEndian();
     }
 
     public float ReadReal()
@@ -128,7 +134,6 @@ public sealed class S7BinaryReader(Stream stream, bool _leaveOpen = false) : IDi
     {
         EndBooleanFlag();
     }
-
 
     public void Dispose()
     {
