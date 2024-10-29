@@ -2,12 +2,22 @@
 
 namespace RoBotos.S7;
 
-public sealed class S7BinaryReader(Stream stream, bool _leaveOpen = false) : IDisposable
+/// <summary>
+/// A specialized stream reader following the S7 decoding for primitive data types.<br/>
+/// The method names follow the S7 data type names and not the C# names!<br/>
+/// </summary>
+/// <param name="stream">The stream to read from</param>
+/// <param name="leaveOpen">Whether the stream should be left open when Disposed is called</param>
+public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDisposable
 {
-    private readonly BinaryReader _reader = new(stream, Encoding.ASCII, _leaveOpen);
+    private readonly BinaryReader _reader = new(stream, Encoding.ASCII, leaveOpen);
+    
     private byte _booleanByte = 0;
     private byte _extractedBools = 0;
     private bool _wasLastBoolean = false;
+
+    private bool _isDisposed = false;
+
     public Stream BaseStream => _reader.BaseStream;
 
     // has to be called before reading anything
@@ -29,7 +39,7 @@ public sealed class S7BinaryReader(Stream stream, bool _leaveOpen = false) : IDi
         return new(_reader.ReadUInt16BigEndian());
     }
 
-    public short ReadInt() // awl int is 16 bits
+    public short ReadInt()
     {
         EndBooleanFlag();
         return _reader.ReadInt16BigEndian();
@@ -137,6 +147,12 @@ public sealed class S7BinaryReader(Stream stream, bool _leaveOpen = false) : IDi
 
     public void Dispose()
     {
+        if (_isDisposed)
+        {
+            return;
+        }
+
         _reader.Dispose();
+        _isDisposed = true;
     }
 }

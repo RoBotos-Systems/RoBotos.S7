@@ -3,15 +3,24 @@ using System.Text;
 
 namespace RoBotos.S7;
 
-// this class buffers all written data until Flush or Dispose is called because sps has to get all data in one packet
-public sealed class S7BinaryWriter(Stream stream, bool _leaveOpen = false) : IDisposable
+/// <summary>
+/// A specialized stream writer following the S7 encoding for primitive data types.<br/>
+/// The method names follow the S7 data type names and not the C# names!<br/>
+/// Flush has to be called for the data to be written into the stream.<br/>
+/// This is because Siemens PLCs expect the entire data package at once
+/// </summary>
+/// <param name="stream">The stream to write into</param>
+/// <param name="leaveOpen">Whether the stream should be left open when Disposed is called</param>
+public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDisposable
 {
     private readonly BinaryWriter _writer = new(new MemoryStream(), Encoding.ASCII, false);
-    private readonly bool _leaveOpen = _leaveOpen;
+    private readonly bool _leaveOpen = leaveOpen;
 
     private byte _booleanByte = 0;
     private byte _cachedBooleans = 0;
     private const byte BOOLEAN_STOP_BYTE = 0x00;
+
+    private bool _isDisposed = false;
 
     public Stream BufferStream => _writer.BaseStream;
     public Stream BaseStream { get; } = stream;
@@ -172,17 +181,21 @@ public sealed class S7BinaryWriter(Stream stream, bool _leaveOpen = false) : IDi
 
     public void Dispose()
     {
+
+        if (_isDisposed)
+        {
+            return;
+        }
+
         Flush();
 
         _writer.Dispose();
 
-        if (_leaveOpen)
-        {
-            BaseStream.Flush();
-        }
-        else
+        if (!_leaveOpen)
         {
             BaseStream.Dispose();
         }
+
+        _isDisposed = true;
     }
 }
