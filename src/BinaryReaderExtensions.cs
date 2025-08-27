@@ -1,4 +1,4 @@
-﻿// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/master/BinaryReaderExtensions.cs
+﻿// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryReaderExtensions.cs
 
 namespace RoBotos.S7;
 

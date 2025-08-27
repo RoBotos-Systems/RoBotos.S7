@@ -36,10 +36,10 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
         _writer.Write(BOOLEAN_STOP_BYTE);
     }
 
-    public void WriteWord(Word value)
+    public void WriteWord(ushort value)
     {
         EndBooleanFlag();
-        _writer.WriteBigEndian(value.Value);
+        _writer.WriteBigEndian(value);
     }
 
     public void WriteInt(short value)

@@ -1,5 +1,6 @@
 ﻿namespace RoBotos.S7;
 
+[Obsolete("use int directly")]
 public readonly record struct DWord(uint Value) : IComparable<DWord>
 {
     public int CompareTo(DWord other) => Value.CompareTo(other.Value);

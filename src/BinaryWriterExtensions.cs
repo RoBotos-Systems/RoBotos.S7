@@ -1,4 +1,7 @@
-﻿// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/master/BinaryWriterExtensions.cs
+﻿// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryWriterExtensions.cs
+
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace RoBotos.S7;
 
@@ -14,23 +17,21 @@ public static class BinaryWriterExtensions
     public static void WriteBigEndian<T>(this BinaryWriter writer, T value, int byteSize, Converter<T> converter)
     {
         Span<byte> buffer = stackalloc byte[byteSize];
-#if RELEASE
-        converter(buffer, value);
-#endif
-#if DEBUG
-        if (!converter(buffer, value))
-        {
-            throw new InvalidOperationException();
-        }
-#endif
+        var success = converter(buffer, value);
+        Debug.Assert(success, $"failed to convert {typeof(T).Name} {value} to bytes");
         writer.WriteBigEndian(buffer);
     }
 
-    public static void WriteBigEndian(this BinaryWriter writer, Span<byte> buffer)
+    public static void WriteBigEndian(this BinaryWriter writer, ReadOnlySpan<byte> buffer)
+    {
+        // copy buffer to allow WriteBigEndian to reverse it
+        WriteBigEndian(writer, (Span<byte>)[.. buffer]);
+    }
+
+    private static void WriteBigEndian(this BinaryWriter writer, Span<byte> buffer)
     {
         if (BitConverter.IsLittleEndian)
         {
-            //do i need to copy?
             buffer.Reverse();
         }
         writer.Write(buffer);
