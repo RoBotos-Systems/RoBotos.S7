@@ -30,7 +30,13 @@ public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDis
 
         _extractedBools = 0;
         _wasLastBoolean = false;
-        _reader.ReadByte(); //skip boolean stop byte
+        _reader.ReadByte(); // skip boolean stop byte
+    }
+
+    public byte ReadByte()
+    {
+        EndBooleanFlag();
+        return _reader.ReadByte();
     }
 
     public ushort ReadWord()

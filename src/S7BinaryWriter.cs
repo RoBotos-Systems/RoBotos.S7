@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Diagnostics;
 using System.Text;
 
 namespace RoBotos.S7;
@@ -36,6 +37,11 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
         _writer.Write(BOOLEAN_STOP_BYTE);
     }
 
+    public void WriteByte(byte value)
+    {
+        EndBooleanFlag();
+        _writer.Write(value);
+    }
     public void WriteWord(ushort value)
     {
         EndBooleanFlag();
@@ -53,7 +59,7 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
         EndBooleanFlag();
         _writer.WriteBigEndian(value);
     }
-    
+
     public void WriteUDInt(uint value)
     {
         EndBooleanFlag();
@@ -76,18 +82,27 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
     {
         EndBooleanFlag();
 
+        if (!IsAscii(value))
+        {
+            throw new ArgumentException("string can only contain ascii characters", nameof(value));
+        }
+
         if (value.Length > maxLength)
         {
             throw new ArgumentException("value.Length cannot be larger than maxLength");
         }
 
-        _writer.Write((byte) maxLength);
-        _writer.Write((byte) value.Length);
+        _writer.Write((byte)maxLength);
+        _writer.Write((byte)value.Length);
 
         Span<byte> buffer = stackalloc byte[maxLength];
-        Encoding.ASCII.GetBytes(value, buffer);
+        var bytesWritten = Encoding.ASCII.GetBytes(value, buffer);
+        Debug.Assert(bytesWritten == value.Length);
 
         _writer.Write(buffer);
+
+        static bool IsAscii(string s)
+            => s.AsSpan().IndexOfAnyExceptInRange('\u0000', '\u007F') < 0;
     }
 
     public void WriteDateTime(DateTime dateTime)
@@ -114,7 +129,7 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
 
         static byte IntToBcd(int value)
         {
-            return (byte) (((value / 10) << 4) | (value % 10));
+            return (byte)(((value / 10) << 4) | (value % 10));
         }
     }
 
@@ -127,7 +142,7 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
 
         if (boolean)
         {
-            var mask = (byte) (0b1 << _cachedBooleans);
+            var mask = (byte)(0b1 << _cachedBooleans);
             _booleanByte |= mask;
         }
 
@@ -151,7 +166,7 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
         EndBooleanFlag();
         _writer.Flush();
 
-        var size = (int) BufferStream.Position;
+        var size = (int)BufferStream.Position;
         if (size <= 0)
         {
             return;
