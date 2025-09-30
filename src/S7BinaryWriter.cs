@@ -108,6 +108,10 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
 
     public void WriteTime(TimeSpan time)
     {
+        if (time.TotalMilliseconds > int.MaxValue || time.TotalMilliseconds < int.MinValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(time), $"{time} is too large/small for S7 32-bit TIME");
+        }
         WriteDInt((int)time.TotalMilliseconds);
     }
 
