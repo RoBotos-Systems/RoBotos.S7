@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using RoBotos.S7.Extensions;
 
 namespace RoBotos.S7;
 
@@ -93,10 +94,15 @@ public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDis
 
         if (bytesRead != maxSize)
         {
-            throw new InvalidDataException($"Expected {maxSize} bytes got {bytesRead}");
+            throw new InvalidDataException($"Expected {maxSize} bytes but got {bytesRead}");
         }
 
         return Encoding.ASCII.GetString(buffer[..actualSize]);
+    }
+
+    public TimeSpan ReadTime()
+    {
+        return TimeSpan.FromMilliseconds(ReadDInt());
     }
 
     public DateTime ReadDateTime()

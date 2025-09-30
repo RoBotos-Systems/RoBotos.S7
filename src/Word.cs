@@ -1,6 +1,6 @@
 ﻿namespace RoBotos.S7;
 
-[Obsolete("use ushort directly")]
+[Obsolete("use ushort directly", error: true)]
 public readonly record struct Word(ushort Value) : IComparable<Word>
 {
     public int CompareTo(Word other) => Value.CompareTo(other.Value);

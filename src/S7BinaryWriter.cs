@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
 using System.Text;
+using RoBotos.S7.Extensions;
 
 namespace RoBotos.S7;
 
@@ -103,6 +104,11 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
 
         static bool IsAscii(string s)
             => s.AsSpan().IndexOfAnyExceptInRange('\u0000', '\u007F') < 0;
+    }
+
+    public void WriteTime(TimeSpan time)
+    {
+        WriteDInt((int)time.TotalMilliseconds);
     }
 
     public void WriteDateTime(DateTime dateTime)

@@ -1,9 +1,8 @@
-﻿// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryWriterExtensions.cs
+// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryWriterExtensions.cs
 
-using System.ComponentModel;
 using System.Diagnostics;
 
-namespace RoBotos.S7;
+namespace RoBotos.S7.Extensions;
 
 public static class BinaryWriterExtensions
 {
