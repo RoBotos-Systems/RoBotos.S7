@@ -1,6 +1,6 @@
 ﻿namespace RoBotos.S7;
 
-[Obsolete("use ulong directly")]
+[Obsolete("use ulong directly", error: true)]
 public readonly record struct LWord(ulong Value) : IComparable<LWord>
 {
     public int CompareTo(LWord other) => Value.CompareTo(other.Value);

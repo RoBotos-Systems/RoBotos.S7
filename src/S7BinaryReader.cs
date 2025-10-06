@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using RoBotos.S7.Extensions;
 
 namespace RoBotos.S7;
 
@@ -30,7 +33,15 @@ public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDis
 
         _extractedBools = 0;
         _wasLastBoolean = false;
-        _reader.ReadByte(); //skip boolean stop byte
+        _reader.ReadByte(); // skip boolean stop byte
+    }
+
+    [Experimental("S7001")]
+    public byte ReadByte()
+    {
+        // don't think this works this way
+        EndBooleanFlag();
+        return _reader.ReadByte();
     }
 
     public ushort ReadWord()
@@ -87,13 +98,18 @@ public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDis
 
         if (bytesRead != maxSize)
         {
-            throw new InvalidDataException($"Expected {maxSize} bytes got {bytesRead}");
+            throw new InvalidDataException($"Expected {maxSize} bytes but got {bytesRead}");
         }
 
         return Encoding.ASCII.GetString(buffer[..actualSize]);
     }
 
-    public DateTime ReadDateTime()
+    public TimeSpan ReadTime()
+    {
+        return TimeSpan.FromMilliseconds(ReadDInt());
+    }
+
+    public DateTime ReadDateTime(DateTimeKind kind)
     {
         EndBooleanFlag();
         Span<byte> buffer = stackalloc byte[8];
@@ -110,10 +126,13 @@ public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDis
         var hour = BcdToInt(buffer[3]);
         var minute = BcdToInt(buffer[4]);
         var second = BcdToInt(buffer[5]);
-        var millisecond = BcdToInt(buffer[6]) * 10 + BcdToInt(buffer[7]) / 100;
+        var millisecond = BcdToInt(buffer[6]) * 10 + BcdToInt((byte)(buffer[7] >> 4));
+        var dow = (DayOfWeek)((buffer[7] & 0x0F) - 1);
 
         var century = (year < 90) ? 2000 : 1900;
-        var dateTime = new DateTime(century + year, month, day, hour, minute, second, millisecond);
+        var dateTime = new DateTime(century + year, month, day, hour, minute, second, millisecond, kind);
+
+        Debug.Assert(dateTime.DayOfWeek == dow);
 
         return dateTime;
 

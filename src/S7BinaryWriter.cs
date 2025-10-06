@@ -1,5 +1,8 @@
 ﻿using System.Buffers;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using RoBotos.S7.Extensions;
 
 namespace RoBotos.S7;
 
@@ -36,6 +39,13 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
         _writer.Write(BOOLEAN_STOP_BYTE);
     }
 
+    [Experimental("S7001")]
+    public void WriteByte(byte value)
+    {
+        // don't think this works this way
+        EndBooleanFlag();
+        _writer.Write(value);
+    }
     public void WriteWord(ushort value)
     {
         EndBooleanFlag();
@@ -53,7 +63,7 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
         EndBooleanFlag();
         _writer.WriteBigEndian(value);
     }
-    
+
     public void WriteUDInt(uint value)
     {
         EndBooleanFlag();
@@ -76,30 +86,50 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
     {
         EndBooleanFlag();
 
+        if (!IsAscii(value))
+        {
+            throw new ArgumentException("string can only contain ascii characters", nameof(value));
+        }
+
         if (value.Length > maxLength)
         {
             throw new ArgumentException("value.Length cannot be larger than maxLength");
         }
 
-        _writer.Write((byte) maxLength);
-        _writer.Write((byte) value.Length);
+        _writer.Write((byte)maxLength);
+        _writer.Write((byte)value.Length);
 
         Span<byte> buffer = stackalloc byte[maxLength];
-        Encoding.ASCII.GetBytes(value, buffer);
+        var bytesWritten = Encoding.ASCII.GetBytes(value, buffer);
+        Debug.Assert(bytesWritten == value.Length);
 
         _writer.Write(buffer);
+
+        static bool IsAscii(string s)
+            => s.AsSpan().IndexOfAnyExceptInRange('\u0000', '\u007F') < 0;
     }
 
+    public void WriteTime(TimeSpan time)
+    {
+        if (time.TotalMilliseconds > int.MaxValue || time.TotalMilliseconds < int.MinValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(time), $"{time} is too large/small for S7 32-bit TIME");
+        }
+        WriteDInt((int)time.TotalMilliseconds);
+    }
+
+    public static DateTime MinDateTime { get; } = new(1990, 1, 1, 0, 0, 0, 0, 0, DateTimeKind.Unspecified);
+    public static DateTime MaxDateTime { get; } = new(2089, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified);
     public void WriteDateTime(DateTime dateTime)
     {
         EndBooleanFlag();
 
-        if (dateTime.Year >= 2090 || dateTime.Year < 1990)
+        if (dateTime > MaxDateTime || dateTime < MinDateTime)
         {
-            throw new ArgumentOutOfRangeException(nameof(dateTime), $"Cannot encode {dateTime.Year}. S7 DATE_AND_TIME ranges from 1990 to 2089");
+            throw new ArgumentOutOfRangeException(nameof(dateTime), $"Cannot encode {dateTime}. S7 DATE_AND_TIME ranges from {MinDateTime} to {MaxDateTime}");
         }
 
-        ReadOnlySpan<byte> buffer = [
+        Span<byte> buffer = [
             IntToBcd(dateTime.Year % 100),
             IntToBcd(dateTime.Month),
             IntToBcd(dateTime.Day),
@@ -110,11 +140,13 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
             IntToBcd((dateTime.Millisecond % 10) * 10),
         ];
 
+        buffer[^1] |= (byte)(dateTime.DayOfWeek + 1);
+
         _writer.Write(buffer);
 
         static byte IntToBcd(int value)
         {
-            return (byte) (((value / 10) << 4) | (value % 10));
+            return (byte)(((value / 10) << 4) | (value % 10));
         }
     }
 
@@ -127,7 +159,7 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
 
         if (boolean)
         {
-            var mask = (byte) (0b1 << _cachedBooleans);
+            var mask = (byte)(0b1 << _cachedBooleans);
             _booleanByte |= mask;
         }
 
@@ -151,7 +183,7 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
         EndBooleanFlag();
         _writer.Flush();
 
-        var size = (int) BufferStream.Position;
+        var size = (int)BufferStream.Position;
         if (size <= 0)
         {
             return;

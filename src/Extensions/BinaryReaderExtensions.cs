@@ -1,6 +1,6 @@
-﻿// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryReaderExtensions.cs
+// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryReaderExtensions.cs
 
-namespace RoBotos.S7;
+namespace RoBotos.S7.Extensions;
 
 public static class BinaryReaderExtensions
 {
