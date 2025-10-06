@@ -118,16 +118,18 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
         WriteDInt((int)time.TotalMilliseconds);
     }
 
+    public static DateTime MinDateTime { get; } = new(1990, 1, 1, 0, 0, 0, 0, 0, DateTimeKind.Unspecified);
+    public static DateTime MaxDateTime { get; } = new(2089, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified);
     public void WriteDateTime(DateTime dateTime)
     {
         EndBooleanFlag();
 
-        if (dateTime.Year >= 2090 || dateTime.Year < 1990)
+        if (dateTime > MaxDateTime || dateTime < MinDateTime)
         {
-            throw new ArgumentOutOfRangeException(nameof(dateTime), $"Cannot encode {dateTime.Year}. S7 DATE_AND_TIME ranges from 1990 to 2089");
+            throw new ArgumentOutOfRangeException(nameof(dateTime), $"Cannot encode {dateTime}. S7 DATE_AND_TIME ranges from {MinDateTime} to {MaxDateTime}");
         }
 
-        ReadOnlySpan<byte> buffer = [
+        Span<byte> buffer = [
             IntToBcd(dateTime.Year % 100),
             IntToBcd(dateTime.Month),
             IntToBcd(dateTime.Day),
@@ -137,6 +139,8 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
             IntToBcd(dateTime.Millisecond / 10),
             IntToBcd((dateTime.Millisecond % 10) * 10),
         ];
+
+        buffer[^1] |= (byte)(dateTime.DayOfWeek + 1);
 
         _writer.Write(buffer);
 

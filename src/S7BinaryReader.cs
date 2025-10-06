@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using RoBotos.S7.Extensions;
 
@@ -108,7 +109,7 @@ public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDis
         return TimeSpan.FromMilliseconds(ReadDInt());
     }
 
-    public DateTime ReadDateTime()
+    public DateTime ReadDateTime(DateTimeKind kind)
     {
         EndBooleanFlag();
         Span<byte> buffer = stackalloc byte[8];
@@ -125,10 +126,13 @@ public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDis
         var hour = BcdToInt(buffer[3]);
         var minute = BcdToInt(buffer[4]);
         var second = BcdToInt(buffer[5]);
-        var millisecond = BcdToInt(buffer[6]) * 10 + BcdToInt(buffer[7]) / 100;
+        var millisecond = BcdToInt(buffer[6]) * 10 + BcdToInt((byte)(buffer[7] >> 4));
+        var dow = (DayOfWeek)((buffer[7] & 0x0F) - 1);
 
         var century = (year < 90) ? 2000 : 1900;
-        var dateTime = new DateTime(century + year, month, day, hour, minute, second, millisecond);
+        var dateTime = new DateTime(century + year, month, day, hour, minute, second, millisecond, kind);
+
+        Debug.Assert(dateTime.DayOfWeek == dow);
 
         return dateTime;
 
