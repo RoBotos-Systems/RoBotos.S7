@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using RoBotos.S7.Extensions;
 
 namespace RoBotos.S7;
@@ -34,8 +35,10 @@ public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDis
         _reader.ReadByte(); // skip boolean stop byte
     }
 
+    [Experimental("S7001")]
     public byte ReadByte()
     {
+        // don't think this works this way
         EndBooleanFlag();
         return _reader.ReadByte();
     }

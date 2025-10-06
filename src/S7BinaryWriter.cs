@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using RoBotos.S7.Extensions;
 
@@ -38,8 +39,10 @@ public sealed class S7BinaryWriter(Stream stream, bool leaveOpen = false) : IDis
         _writer.Write(BOOLEAN_STOP_BYTE);
     }
 
+    [Experimental("S7001")]
     public void WriteByte(byte value)
     {
+        // don't think this works this way
         EndBooleanFlag();
         _writer.Write(value);
     }
