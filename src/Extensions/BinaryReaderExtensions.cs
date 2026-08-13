@@ -1,4 +1,4 @@
-// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryReaderExtensions.cs
+// copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryReaderExtensions.cs
 
 using System.Buffers.Binary;
 

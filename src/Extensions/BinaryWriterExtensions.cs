@@ -1,4 +1,4 @@
-// Class copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryWriterExtensions.cs
+// copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryWriterExtensions.cs
 
 using System.Buffers.Binary;
 using System.Diagnostics;
