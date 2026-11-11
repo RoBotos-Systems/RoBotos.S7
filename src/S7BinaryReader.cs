@@ -10,7 +10,7 @@ namespace RoBotos.S7;
 /// The method names follow the S7 data type names and not the C# names!<br/>
 /// </summary>
 /// <param name="stream">The stream to read from</param>
-/// <param name="leaveOpen">Whether the stream should be left open when Disposed is called</param>
+/// <param name="leaveOpen">Whether the underlying stream should be left open when Disposed is called</param>
 public sealed class S7BinaryReader(Stream stream, bool leaveOpen = false) : IDisposable
 {
     private readonly BinaryReader _reader = new(stream, Encoding.ASCII, leaveOpen);

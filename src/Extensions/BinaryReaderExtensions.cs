@@ -1,4 +1,4 @@
-// copied from https://github.com/BarionLP/Ametrin.Utils/blob/main/src/BinaryReaderExtensions.cs
+// copied from https://codeberg.org/Barion/Ametrin.Utils/src/branch/main/src/BinaryReaderExtensions.cs
 
 using System.Buffers.Binary;
 
@@ -6,24 +6,25 @@ namespace RoBotos.S7.Extensions;
 
 public static class BinaryReaderExtensions
 {
-    public static double ReadDoubleBigEndian(this BinaryReader reader) => reader.Read(BinaryPrimitives.ReadDoubleBigEndian, sizeof(double));
-    public static float ReadSingleBigEndian(this BinaryReader reader) => reader.Read(BinaryPrimitives.ReadSingleBigEndian, sizeof(float));
-
-    public static long ReadInt64BigEndian(this BinaryReader reader) => reader.Read(BinaryPrimitives.ReadInt64BigEndian, sizeof(long));
-    public static ulong ReadUInt64BigEndian(this BinaryReader reader) => reader.Read(BinaryPrimitives.ReadUInt64BigEndian, sizeof(ulong));
-    
-    public static int ReadInt32BigEndian(this BinaryReader reader) => reader.Read(BinaryPrimitives.ReadInt32BigEndian, sizeof(int));
-    public static uint ReadUInt32BigEndian(this BinaryReader reader) => reader.Read(BinaryPrimitives.ReadUInt32BigEndian, sizeof(uint));
-
-    public static short ReadInt16BigEndian(this BinaryReader reader) => reader.Read(BinaryPrimitives.ReadInt16BigEndian, sizeof(short));
-    public static ushort ReadUInt16BigEndian(this BinaryReader reader) => reader.Read(BinaryPrimitives.ReadUInt16BigEndian, sizeof(ushort));
-
-    private static T Read<T>(this BinaryReader reader, Converter<T> converter, int byteSize) where T : struct
+    extension(BinaryReader reader)
     {
-        Span<byte> buffer = stackalloc byte[byteSize];
-        reader.ReadExactly(buffer);
-        return converter(buffer);
-    }
+        public double ReadDoubleBigEndian() => reader.Read(BinaryPrimitives.ReadDoubleBigEndian, sizeof(double));
+        public float ReadSingleBigEndian() => reader.Read(BinaryPrimitives.ReadSingleBigEndian, sizeof(float));
 
-    private delegate T Converter<out T>(ReadOnlySpan<byte> buffer);
+        public long ReadInt64BigEndian() => reader.Read(BinaryPrimitives.ReadInt64BigEndian, sizeof(long));
+        public ulong ReadUInt64BigEndian() => reader.Read(BinaryPrimitives.ReadUInt64BigEndian, sizeof(ulong));
+
+        public int ReadInt32BigEndian() => reader.Read(BinaryPrimitives.ReadInt32BigEndian, sizeof(int));
+        public uint ReadUInt32BigEndian() => reader.Read(BinaryPrimitives.ReadUInt32BigEndian, sizeof(uint));
+
+        public short ReadInt16BigEndian() => reader.Read(BinaryPrimitives.ReadInt16BigEndian, sizeof(short));
+        public ushort ReadUInt16BigEndian() => reader.Read(BinaryPrimitives.ReadUInt16BigEndian, sizeof(ushort));
+
+        private T Read<T>(Func<ReadOnlySpan<byte>, T> converter, int byteSize) where T : struct
+        {
+            Span<byte> buffer = stackalloc byte[byteSize];
+            reader.ReadExactly(buffer);
+            return converter(buffer);
+        }
+    }
 }
